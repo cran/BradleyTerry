@@ -1,15 +1,14 @@
-\name{BradleyTerry}
+\name{BTm}
 \alias{BTm}
 \alias{drop1.BTm}
 \alias{add1.BTm}
 \alias{terms.BTm}
 \alias{formula.BTm}
-\alias{BTresiduals}
-\alias{BTabilities}
 \title{ Bradley-Terry model and extensions }
 \description{
   Fits Bradley-Terry models for pair comparison data, including
-  models with structured scores and missing covariate data.  Fits
+  models with structured scores, order effect and missing covariate data.  
+  Fits
   by either maximum likelihood or maximum penalized likelihood
   (with Jeffreys-prior penalty).
 }
@@ -17,10 +16,6 @@
 BTm(formula, refcat = NULL, offset = NULL, contrasts = NULL,
 data = NULL, subset = NULL, br = FALSE, order.effect =
 NULL, ...)
-
-BTresiduals(model)
-
-BTabilities(model)
 }
 \arguments{
   \item{formula}{ A model formula for the Bradley-Terry \dQuote{ability}
@@ -33,8 +28,9 @@ BTabilities(model)
     RHS have length equal to the number of players.  The special RHS
     formula \code{..} specifies the standard Bradley-Terry model
     with unstructured abilities.}
-  \item{refcat}{ Which is the \dQuote{reference} player?  Only used with
-    \code{..} on the RHS of the formula.  Default is player 1.}
+  \item{refcat}{ Character.  Which is the \dQuote{reference} player?  Only used with
+    \code{..} on the RHS of the formula (otherwise ignored if supplied).
+    Default is the name of the alphanumerically-first player.}
   \item{offset}{ An optional offset term in the model. A vector of
     length equal to the number of players.}
   \item{contrasts}{ As for \code{\link{glm}}. }
@@ -52,9 +48,7 @@ BTabilities(model)
     advantage effect).  Values should be 1 where contest winner has
     the advantage, -1 where loser has the advantage, and 0 where neither
     player is advantaged.}
-  \item{\dots}{other arguments for \code{glm} or \code{brlr} }
-  \item{model}{a model object for which \code{inherits(model, "BTm")} is
-    \code{TRUE}}
+  \item{\dots}{Other arguments for \code{glm} or \code{brlr} }
 }
 \details{
   No allowance is made for tied contests.
@@ -66,10 +60,6 @@ BTabilities(model)
   manipulated subsequently to include further terms involving
   contest-specific predictors.
 
-  The residuals returned by \code{BTresiduals} are weighted means of
-  working residuals, with weights equal to the binomial denominators in
-  the fitted model.  These are suitable for diagnostic model checking,
-  for example plotting against candidate predictors.
 }
 \value{
   An object of class \code{c("BTm", "glm", "lm")}, or of class
@@ -90,15 +80,11 @@ BTabilities(model)
     ability for \code{refcat} set to zero if \code{refcat} is specified
     (otherwise the first player has zero ability).  First column is
     estimated ability, second column is the standard error for that
-    estmate.  One row for each player.}
-
-  Function \code{BTresiduals} returns a vector of residuals, one for each
-  \dQuote{player}.
-
-  Function \code{BTabilities} simply returns the \code{abilities}
-  component of the specified model.
-  
+    estimate.  One row for each player.}
 }
+\seealso{
+  \code{\link{BTresiduals}}, \code{\link{BTabilities}}
+  }
 \references{
 
 Agresti, A (2002)  \emph{Categorical Data Analysis} (2nd ed).  New York: Wiley.
@@ -109,6 +95,9 @@ B J Francis, R Gilchrist and G Tutz, pp91--100.  New York: Springer.
 
 Firth, D. (1993)  Bias reduction of maximum likelihood estimates.
   \emph{Biometrika} \bold{80}, 27--38.
+  
+Firth, D. (2005)  Bradley-Terry models in R.  \emph{Journal of Statistical
+Software}, to appear.
   
 Stigler, S. (1994)  Citation patterns in the journals of statistics 
 and probability.  \emph{Statistical Science} \bold{9}, 94--108.
@@ -129,58 +118,30 @@ and probability.  \emph{Statistical Science} \bold{9}, 94--108.
 ##
 ##  Statistics journal citation data from Stigler (1994)
 ##  -- see also Agresti (2002, p448)
-journals <- c("Biometrika", "Comm Statist", "JASA", "JRSS-B")
-citedata <- matrix(c(NA,33,320,284,
-                     730,NA,813,276,
-                     498,68,NA,325,
-                     221,17,142,NA),
-                   4,4,
-                   dimnames = list(winner = journals, loser = journals))
-citedata <- as.data.frame.table(citedata)
+data(citations)
                  
 ##  First fit the "standard" Bradley-Terry model
-print(mymodel <- BTm(citedata ~ ..))
+print(citeModel <- BTm(citations ~ ..))
 
 ##  Now the same thing with a different "reference" journal
-print(mymodel2 <- update(mymodel, . ~ ., refcat = "JASA"))
+update(citeModel, . ~ ., refcat = "JASA")
 
 ##  Is the "citeability" of a journal predicted by its country of origin?
 origin <- factor(c("UK", "USA", "USA", "UK"))
-print(mynewmodel <- BTm(citedata ~ origin))
+print(citeModel2 <- BTm(citations ~ origin))
 
 ##  Hmm... not so sure about the origin of "Comm Statist" ...
 is.na(origin[2]) <- TRUE
-mynewmodel2 <- update(mynewmodel, . ~ .)
-BTabilities(mynewmodel2)
+citeModel2 <- update(citeModel2, . ~ .)
 
 ##  Now an example with an order effect -- see Agresti (2002) p438
-teams <- c("Milwaukee", "Detroit", "Toronto",
-           "New York", "Boston", "Cleveland", "Baltimore")
-baseball <- data.frame(
-  winner = factor(rep(rep(1:7, rep(7,7)), 2), labels =  teams),
-  loser = factor(rep(rep(1:7, 7), 2), labels = teams),
-  Freq = c(NA,4,4,4,6,4,6,  # home wins
-           3,NA,4,4,6,6,4,
-           2,4,NA,2,4,4,6,
-           3,5,2,NA,4,4,6,
-           5,2,3,4,NA,5,6,
-           2,3,3,4,4,NA,2,
-           2,1,1,2,1,3,NA,
-           NA,3,5,3,1,5,5,  # away wins
-           3,NA,3,1,5,3,5,
-           2,2,NA,5,3,4,6,
-           3,3,4,NA,2,3,4,
-           1,0,3,3,NA,2,6,
-           2,1,2,2,2,NA,4,
-           0,3,0,1,0,4,NA),
-   home.adv = rep(c(1, -1), c(49,49)))
+data(baseball)
 
 ##  Simple Bradley-Terry model as in Agresti p437
-print(baseball.model <- BTm(baseball ~ ..))
-BTresiduals(baseball.model)
+print(baseballModel <- BTm(baseball ~ ..))
 
 ##  Introduce order effect as in Agresti p438
-update(baseball.model, order.effect = baseball$home.adv)   
+update(baseballModel, order.effect = baseball$home.adv)   
 
 }
 \keyword{ models }

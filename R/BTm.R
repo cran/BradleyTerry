@@ -92,7 +92,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
                           is.factor(eval(parse(text = label), m)))
         xnames <- xnames[xlevels]
         xlevels <- lapply(xnames, function(label)
-                          levels(eval(parse(text = label))))
+                          levels(eval(parse(text = label), m)))
         names(xlevels) <- xnames}
 ## Set up some basic design columns for possible use in case
 ## covariates or offset have NAs
