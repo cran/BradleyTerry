@@ -46,6 +46,7 @@
                            na.action = I,
                            data = eval(data.arg, parent.frame()))}
         x <- model.matrix(Terms, m, contrasts = object$contrasts)
+        rownames(x) <- rownames(object$x0)
         temp <- attr(x, "assign")
     }
     n <- nrow(x)
