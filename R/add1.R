@@ -15,7 +15,7 @@
                       lower.tail = FALSE)
         list(Fs = Fs, P = P)
     }
-    formula0 <- eval(object$call$formula, parent.frame())
+    formula0 <- formula(object)
     if (formula0[[3]] == "..") 
         stop("no terms to add -- the model is already saturated")
     if (!is.character(scope)) 
@@ -33,9 +33,7 @@
     new.form <- update.formula(formula0, add.rhs)
     new.form[[2]] <- NULL
     Terms <- terms(new.form)
-    y <- eval(eval(object$call$formula, parent.frame())[[2]], 
-              parent.frame())
-    wt <- object$prior.weights
+    y <- object$y0
     if (is.null(x)) {
         fc <- object$call
         fc$formula <- Terms
@@ -51,23 +49,21 @@
         temp <- attr(x, "assign")
     }
     n <- nrow(x)
-    if (is.null(wt)) 
-        wt <- rep.int(1, n * (n - 1)/2)
     Terms <- attr(Terms, "term.labels")
     asgn <- attr(x, "assign")
     ousex <- match(asgn, match(oTerms, Terms), 0) > 0
     control <- object$control
-    br <- eval(object$call$br, parent.frame())
+    br <- object$bias.reduction
     if (is.null(br)) 
         br <- FALSE
-    order.effect <- eval(object$call$order.effect, parent.frame())
     for (tt in scope) {
         usex <- match(asgn, match(tt, Terms), 0) > 0
         X <- x[order(rownames(x)), usex | ousex, drop = FALSE]
-        z <- BTm(y ~ X, offset = eval(object$call$offset,
-                        parent.frame()), 
-                 control = object$control, br = br,
-                 order.effect = order.effect)
+        z <- BTm(y ~ X,
+                 offset = object$offset0,
+                 control = object$control,
+                 br = br,
+                 order.effect = object$order.effect)
         dfs[tt] <- z$rank
         dev[tt] <- z$deviance
     }

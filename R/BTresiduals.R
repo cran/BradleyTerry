@@ -1,4 +1,6 @@
 BTresiduals <- function(model){
+    if (!inherits(model, "BTm")) stop(
+          "not a Bradley-Terry model")
     res <- model$residuals  ## the "working" residuals
     denom <- model$weights
     nwords <- if (is.null(model$call$order.effect)) 3 else 4

@@ -1,6 +1,5 @@
 \name{BradleyTerry}
 \alias{BTm}
-\alias{update.BTm}
 \alias{drop1.BTm}
 \alias{add1.BTm}
 \alias{terms.BTm}
@@ -16,7 +15,7 @@
 }
 \usage{
 BTm(formula, refcat = NULL, offset = NULL, contrasts = NULL,
-data = NULL, weights = NULL, subset = NULL, br = FALSE, order.effect =
+data = NULL, subset = NULL, br = FALSE, order.effect =
 NULL, ...)
 
 BTresiduals(model)
@@ -27,7 +26,7 @@ BTabilities(model)
   \item{formula}{ A model formula for the Bradley-Terry \dQuote{ability}
     parameters.  Response variable should be a data frame containing
     contest results: columns include factors named "winner" (by default
-    column 1) and     "loser" (by default column 2), and possibly also
+    column 1) and "loser" (by default column 2), and possibly also
     "Freq", a numeric vector recording the
     frequency of each contest result (taken to be 1 if omitted).
     Variables on
@@ -40,9 +39,10 @@ BTabilities(model)
     length equal to the number of players.}
   \item{contrasts}{ As for \code{\link{glm}}. }
   \item{data}{ A data frame, in which RHS variables can be found. }
-  \item{weights}{ An optional vector of weights.  Has no effect on the fit. }
-  \item{subset}{  An optional logical or numeric vector specifying a subset of observations to be
-          used in the fitting process. }
+  \item{subset}{  An optional logical or numeric vector specifying a 
+  subset of 
+  observations (ie, a subset of rows of the response dataframe) 
+  to be used in the fitting process. }
   \item{br}{ Logical.  If \code{TRUE}, fitting will be by penalized
     maximum likelihood as in Firth (1992, 1993), using
     \code{\link[brlr]{brlr}} from
@@ -78,7 +78,14 @@ BTabilities(model)
   \item{x0}{Model matrix for the formula as supplied (rather than
     the model matrix actually used in the subsidiary call to \code{glm}
     or \code{brlr}, which is included as component \code{x} if the call
-    includes \code{x = TRUE}).}
+    includes \code{x = TRUE}).  One row for each player.}
+  \item{offset0}{The supplied offset vector, if any was specified.  
+    One element for each player.  (The offset vector actually used
+    in the subsidiary call to \code{glm}
+    or \code{brlr} is included as component \code{offset}.)}
+  \item{y0}{The data frame of contest winners and losers, containing 
+  only those rows actually used in fitting the model.}
+  \item{order.effect}{The values of order.effect, if specified.}
   \item{abilities}{A two-column matrix of estimated abilities, with the
     ability for \code{refcat} set to zero if \code{refcat} is specified
     (otherwise the first player has zero ability).  First column is
@@ -113,7 +120,8 @@ and probability.  \emph{Statistical Science} \bold{9}, 94--108.
   \itemize{
     \item \code{add1.BTm}
     \item \code{drop1.BTm}
-    \item \code{update.BTm}
+    \item \code{terms.BTm}
+    \item \code{formula.BTm}
   }
   Others are inherited from \code{glm} or \code{lm}.
 }

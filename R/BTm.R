@@ -1,8 +1,8 @@
 BTm <- function(formula, refcat = NULL, offset = NULL,
-                contrasts = NULL, data = NULL, weights = NULL,
+                contrasts = NULL, data = NULL, 
                 subset = NULL, br = FALSE, order.effect = NULL,
                 ...){
-# First define some utility functions
+## First define some utility functions
     expand.col <- function(col){
         col[is.na(col)] <- 0
         mat <- outer(col, col, "-")
@@ -12,9 +12,10 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
             matrix(, nrow(design)*(nrow(design)-1)/2, 0)
         }  else apply(design, 2, expand.col)}
     unravel <- function(matrix) matrix[row(matrix) > col(matrix)]
-# Decode the function call
-    if (!is.null(weights))
-        stop("weights argument not implemented")
+## Decode the function call
+    dots <- match.call(expand.dots = FALSE)$...
+    if (!is.null(dots$weights))
+        stop("weights argument is not implemented in BTm")
     if (!is.null(subset) &&
         !is.logical(subset) &&
         !is.numeric(subset))
@@ -29,7 +30,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         stop("order.effect has the wrong length")
     }
     m$formula[[2]] <- NULL
-    freq <- {if ("Freq" %in% colnames(ymat)) ymat[,"Freq"]
+    freq <- {if ("Freq" %in% colnames(ymat)) ymat[, "Freq"]
                  else rep(1, nrow(ymat))}
     if (is.logical(subset) && (length(subset) != nrow(ymat)))
         stop("subset argument has wrong length")
@@ -67,7 +68,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         m <- model.frame(~ ..)
         row.names(m) <- m$..
     } else { 
-        m$refcat <- m$... <- m$contrasts <- m$weights <-
+        m$refcat <- m$... <- m$contrasts <-
             m$subset <- m$br <- m$order.effect <- NULL
         m$drop.unused.levels <- TRUE
         if (is.null(m$data)) m$data <- data.frame(playernames)
@@ -78,11 +79,11 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         m <- m[playernames, , drop = FALSE]
     } else {
         if (nrow(m) != length(playernames)) stop(
-                "LHS and RHS data lengths difer")
+                "LHS and RHS data lengths differ")
     }
     row.names(m) <- playernames
     Terms <- attr(m, "terms")
-# Get info on factors, to put in the result object
+## Get info on factors, to put in the result object
     xlevels <- NULL
     if (length(attr(Terms, "factors")) > 0){
         xlevels <- (attr(Terms, "order") == 1)
@@ -93,13 +94,13 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         xlevels <- lapply(xnames, function(label)
                           levels(eval(parse(text = label))))
         names(xlevels) <- xnames}
-# Set up some basic design columns for possible use in case
-# covariates or offset have NAs
+## Set up some basic design columns for possible use in case
+## covariates or offset have NAs
     player.cols <- diag(1, nplayers)
     rownames(player.cols) <- colnames(player.cols) <- playernames
     colnames(player.cols) <- paste("..", colnames(player.cols),
                                    sep = "") 
-# Now make the Bradley-Terry design matrix.
+## Now make the Bradley-Terry design matrix.
     cols.to.add <- logical(nrow(m))
     x <- x0 <- model.matrix(Terms, m, contrasts)
     colnames(x0) <- make.names(colnames(x0))
@@ -114,7 +115,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     }
     cols.to.add <- x.has.NA
     x <- BTexpand(x)
-# Next sort out the offset, if there is one
+## Next sort out the offset, if there is one
     offset <- offset0 <- model.extract(m, offset)
     if (!is.null(offset)){
         offset.has.NA <- is.na(offset)
@@ -129,7 +130,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         unravel(outer(playernames, playernames,
                          function(x, y) paste(x, y, sep = " vs ")))
     if (!is.null(offset)) names(offset) <- rownames(x)
-# Now set up the matrix of binomial response data
+## Now set up the matrix of binomial response data
     y <- matrix(0 , length(freq), 2)
     colnames(y) <- c("won", "lost")
     winnernum <- match(winner, playernames)
@@ -163,7 +164,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         colnames(x) <- c(xnames, ".order")
     }
     if (ncol(x) == 0) x <- cbind(x, 0)
-# Finally, fit the model
+## Next, the main part: fit the model!
     fmla <- as.formula(paste(c("BTyvar ~ 0",
                              make.names(colnames(x))),
                              collapse = "+"))
@@ -173,6 +174,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     }
     result <- fitmodel(fmla, offset = offset, family = binomial,
                   data = data.frame(x), ...)
+## Now compute abiliy estimates and standard errors for those
     na.to.zero <- function(xmat) {
         if (dim(xmat)[2] == 0) return(xmat)
         result <- apply(xmat, 1, function(row){
@@ -205,6 +207,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     abilities <- cbind(abilities, se.ability)
     colnames(abilities) <- c("ability", "s.e.")
     rownames(abilities) <- playernames    
+## Finally, tidy up the result object
     names(result$fitted.values) <-
         names(result$y) <-
         names(result$residuals) <-
@@ -217,6 +220,9 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     result$xlevels <- xlevels
     result$contrasts <- xcont
     result$terms <- Terms
+    result$y0 <- ymat[valid.contest, ]
+    result$order.effect <- order.effect[valid.contest]
+    result$offset0 <- offset0
     xassign <- attr(x0, "assign")
     if (dim(x0)[2] > 0){
         x0 <- x0[, -1, drop = FALSE]

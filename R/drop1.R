@@ -21,21 +21,19 @@
     chisq <- object$deviance
     dfs <- numeric(ns)
     dev <- numeric(ns)
-    y <- eval(eval(object$call$formula, parent.frame())[[2]], 
-              parent.frame())
-    br <- eval(object$call$br, parent.frame())
+    y <- object$y0
+    br <- object$bias.reduction
     if (is.null(br)) 
         br <- FALSE
-    order.effect <- eval(object$call$order.effect, parent.frame())
     control <- object$control
     for (i in 1:ns) {
         ii <- seq(along = asgn)[asgn == ndrop[i]]
         jj <- setdiff(seq(ncol(x)), ii)
-        xi <- x[order(rownames(object$x0)), jj, drop = FALSE]
+        xi <- x[ , jj, drop = FALSE]
         z <- BTm(y ~ xi,
-                 offset = eval(object$call$offset, parent.frame()), 
+                 offset = object$offset0, 
                  br = br,
-                 order.effect = order.effect,
+                 order.effect = object$order.effect,
                  control = control)
         dfs[i] <- z$rank
         dev[i] <- z$deviance
