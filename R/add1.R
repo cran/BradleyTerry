@@ -1,6 +1,7 @@
-add1.BTm <- 
-function (object, scope, scale = 0, test = c("none", "Chisq", 
-    "F"), x = NULL, k = 2, ...) 
+"add1.BTm" <-
+    function (object, scope, scale = 0,
+              test = c("none", "Chisq", "F"),
+              x = NULL, k = 2, ...) 
 {
     Fstat <- function(table, rdf) {
         dev <- table$Deviance
@@ -15,7 +16,7 @@ function (object, scope, scale = 0, test = c("none", "Chisq",
         list(Fs = Fs, P = P)
     }
     formula0 <- eval(object$call$formula, parent.frame())
-    if (formula0[[3]] == "..")
+    if (formula0[[3]] == "..") 
         stop("no terms to add -- the model is already saturated")
     if (!is.character(scope)) 
         scope <- add.scope(object, update.formula(object, scope))
@@ -32,40 +33,47 @@ function (object, scope, scale = 0, test = c("none", "Chisq",
     new.form <- update.formula(formula0, add.rhs)
     new.form[[2]] <- NULL
     Terms <- terms(new.form)
-    y <- eval(eval(object$call$formula, parent.frame())[[2]],
+    y <- eval(eval(object$call$formula, parent.frame())[[2]], 
               parent.frame())
     wt <- object$prior.weights
     if (is.null(x)) {
         fc <- object$call
         fc$formula <- Terms
-        m <- model.frame(fc$formula, xlev = object$xlevels,
-                         na.action = I)
+        data.arg <- object$call$data
+        m <- if (is.null(data.arg)){
+               model.frame(fc$formula, xlev = object$xlevels,
+                           na.action = I)}
+             else {
+               model.frame(fc$formula, xlev = object$xlevels,
+                           na.action = I,
+                           data = eval(data.arg, parent.frame()))}
         x <- model.matrix(Terms, m, contrasts = object$contrasts)
         temp <- attr(x, "assign")
     }
     n <- nrow(x)
     if (is.null(wt)) 
-        wt <- rep.int(1, n*(n-1)/2)
+        wt <- rep.int(1, n * (n - 1)/2)
     Terms <- attr(Terms, "term.labels")
     asgn <- attr(x, "assign")
     ousex <- match(asgn, match(oTerms, Terms), 0) > 0
     control <- object$control
     br <- eval(object$call$br, parent.frame())
-    if (is.null(br)) br <- FALSE
+    if (is.null(br)) 
+        br <- FALSE
     order.effect <- eval(object$call$order.effect, parent.frame())
     for (tt in scope) {
         usex <- match(asgn, match(tt, Terms), 0) > 0
-        X <- x[, usex | ousex, drop = FALSE]
-        z <- BTm(y ~ X,
-                 offset = eval(object$call$offset, parent.frame()),
-                 control = object$control,
-                 br = br,
+        X <- x[order(rownames(x)), usex | ousex, drop = FALSE]
+        z <- BTm(y ~ X, offset = eval(object$call$offset,
+                        parent.frame()), 
+                 control = object$control, br = br,
                  order.effect = order.effect)
         dfs[tt] <- z$rank
         dev[tt] <- z$deviance
     }
     if (scale == 0) 
-        dispersion <- summary(object, dispersion = NULL)$dispersion
+        dispersion <- summary(object,
+                              dispersion = NULL)$dispersion
     else dispersion <- scale
     fam <- object$family$family
     if (fam == "gaussian") {
@@ -78,9 +86,9 @@ function (object, scope, scale = 0, test = c("none", "Chisq",
     aic <- aic + (extractAIC(object, k = k)[2] - aic[1])
     dfs <- dfs - dfs[1]
     dfs[1] <- NA
-    aod <- data.frame(Df = dfs, Deviance = dev,
-                      AIC = aic, row.names = names(dfs), 
-        check.names = FALSE)
+    aod <- data.frame(Df = dfs, Deviance = dev, AIC = aic,
+                      row.names = names(dfs), 
+                      check.names = FALSE)
     if (all(is.na(aic))) 
         aod <- aod[, -3]
     test <- match.arg(test)
@@ -99,12 +107,12 @@ function (object, scope, scale = 0, test = c("none", "Chisq",
     else if (test == "F") {
         if (fam == "binomial" || fam == "poisson") 
             warning(paste("F test assumes quasi", fam, " family", 
-                sep = ""))
+                          sep = ""))
         rdf <- object$df.residual
         aod[, c("F value", "Pr(F)")] <- Fstat(aod, rdf)
     }
     head <- c("Single term additions", "\nModel:",
-              deparse(formula0),
+              deparse(formula0), 
               if (scale > 0) paste("\nscale: ",
                                    format(scale), "\n"))
     class(aod) <- c("anova", "data.frame")

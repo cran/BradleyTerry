@@ -3,6 +3,8 @@
 \alias{update.BTm}
 \alias{drop1.BTm}
 \alias{add1.BTm}
+\alias{terms.BTm}
+\alias{formula.BTm}
 \alias{BTresiduals}
 \alias{BTabilities}
 \title{ Bradley-Terry model and extensions }

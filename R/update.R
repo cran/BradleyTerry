@@ -6,8 +6,7 @@
         stop("need an object with call component")
     extras <- match.call(expand.dots = FALSE)$...
     if (!missing(formula.)) 
-        call$formula <- update.formula(
-            eval(object$call$formula, parent.frame()), formula.)
+        call$formula <- update.formula(formula(object), formula.)
     if (length(extras) > 0) {
         existing <- !is.na(match(names(extras), names(call)))
         for (a in names(extras)[existing]) call[[a]] <- extras[[a]]

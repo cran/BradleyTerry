@@ -1,7 +1,6 @@
 "drop1.BTm" <-
-    function (object, scope, scale = 0,
-              test = c("none", "Chisq", "F"),
-              k = 2, ...) 
+    function (object, scope, scale = 0, test = c("none", "Chisq", 
+                                        "F"), k = 2, ...) 
 {
     x <- object$x0
     n <- nrow(x)
@@ -22,19 +21,21 @@
     chisq <- object$deviance
     dfs <- numeric(ns)
     dev <- numeric(ns)
-    y <- eval(eval(object$call$formula, parent.frame())[[2]],
+    y <- eval(eval(object$call$formula, parent.frame())[[2]], 
               parent.frame())
     br <- eval(object$call$br, parent.frame())
-    if (is.null(br)) br <- FALSE
+    if (is.null(br)) 
+        br <- FALSE
     order.effect <- eval(object$call$order.effect, parent.frame())
     control <- object$control
     for (i in 1:ns) {
         ii <- seq(along = asgn)[asgn == ndrop[i]]
         jj <- setdiff(seq(ncol(x)), ii)
-        xi <- x[, jj, drop = FALSE]
-        z <- BTm(y ~ xi, offset = eval(object$call$offset,
-                         parent.frame()),
-                 br = br, order.effect = order.effect,
+        xi <- x[order(rownames(object$x0)), jj, drop = FALSE]
+        z <- BTm(y ~ xi,
+                 offset = eval(object$call$offset, parent.frame()), 
+                 br = br,
+                 order.effect = order.effect,
                  control = control)
         dfs[i] <- z$rank
         dev[i] <- z$deviance
@@ -56,8 +57,11 @@
     dfs <- dfs[1] - dfs
     dfs[1] <- NA
     aic <- aic + (extractAIC(object, k = k)[2] - aic[1])
-    aod <- data.frame(Df = dfs, Deviance = dev, AIC = aic,
-                      row.names = scope, check.names = FALSE)
+    aod <- data.frame(Df = dfs,
+                      Deviance = dev,
+                      AIC = aic,
+                      row.names = scope, 
+                      check.names = FALSE)
     if (all(is.na(aic))) 
         aod <- aod[, -3]
     test <- match.arg(test)
@@ -90,9 +94,11 @@
         aod[, c("F value", "Pr(F)")] <- list(Fs, P)
     }
     head <- c("Single term deletions", "\nModel:",
-              deparse(eval(object$call$formula, parent.frame())),
-              if (!is.null(scale) && scale > 0){
-                  paste("\nscale: ", format(scale), "\n")})
+              deparse(eval(object$call$formula, 
+                      parent.frame())),
+              if (!is.null(scale) && scale > 0) {
+                  paste("\nscale: ", format(scale), "\n")
+              })
     class(aod) <- c("anova", "data.frame")
     attr(aod, "heading") <- head
     aod
