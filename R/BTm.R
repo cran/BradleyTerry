@@ -13,6 +13,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         }  else apply(design, 2, expand.col)}
     unravel <- function(matrix) matrix[row(matrix) > col(matrix)]
 ## Decode the function call
+    if (!is.null(refcat)) refcat <- make.names(refcat)
     dots <- match.call(expand.dots = FALSE)$...
     if (!is.null(dots$weights))
         stop("weights argument is not implemented in BTm")
@@ -22,6 +23,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         stop("subset argument must be a logical or numeric vector")
     m <- match.call(expand.dots = FALSE)
     m$formula <- theformula <- eval(m$formula, parent.frame())
+    if (!inherits(theformula, "formula")) stop("invalid formula argument")
     m[[1]] <- as.name("model.frame")
     m$na.action <- I
     ymat <- eval(m$formula[[2]], parent.frame())
@@ -30,6 +32,9 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         stop("order.effect has the wrong length")
     }
     m$formula[[2]] <- NULL
+    if ("freq" %in% colnames(ymat) && !("Freq" %in% colnames(ymat))) {
+        warning("Data column 'freq' ignored.  Use 'Freq' as the name for a column of frequencies, if that is what you intended")
+    }
     freq <- {if ("Freq" %in% colnames(ymat)) ymat[, "Freq"]
                  else rep(1, nrow(ymat))}
     if (is.logical(subset) && (length(subset) != nrow(ymat)))
@@ -40,7 +45,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     if (is.null(subset)) subset <- rep(TRUE, nrow(ymat))
     valid.contest <- subset & !is.na(freq)
     freq <- freq[valid.contest]
-    if (!is.numeric(freq)) stop("freq vector should be numeric")
+    if (!is.numeric(freq)) stop("Freq column should be numeric")
     if (!is.null(order.effect))
         order.effect <- order.effect[valid.contest]
     winner <- if ("winner" %in% colnames(ymat)){
@@ -64,7 +69,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         }
         if (!is.null(offset)) warning("offset ignored")
         .. <- factor(playernames)
-        if (!is.null(refcat)) .. <- relevel(.., make.names(refcat))
+        if (!is.null(refcat)) .. <- relevel(.., refcat)
         m <- model.frame(~ ..)
         row.names(m) <- m$..
     } else { 
