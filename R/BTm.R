@@ -1,5 +1,5 @@
 BTm <- function(formula, refcat = NULL, offset = NULL,
-                contrasts = NULL, data = NULL, 
+                contrasts = NULL, data = NULL,
                 subset = NULL, br = FALSE, order.effect = NULL,
                 ...){
 ## First define some utility functions
@@ -41,7 +41,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         stop("subset argument has wrong length")
     if (is.numeric(subset) && any(!(subset %in% 1:nrow(ymat))))
         stop("subset values not all valid")
-    if (is.numeric(subset)) subset <- (1:nrow(ymat)) %in% subset 
+    if (is.numeric(subset)) subset <- (1:nrow(ymat)) %in% subset
     if (is.null(subset)) subset <- rep(TRUE, nrow(ymat))
     valid.contest <- subset & !is.na(freq)
     freq <- freq[valid.contest]
@@ -72,7 +72,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         if (!is.null(refcat)) .. <- relevel(.., refcat)
         m <- model.frame(~ ..)
         row.names(m) <- m$..
-    } else { 
+    } else {
         m$refcat <- m$... <- m$contrasts <-
             m$subset <- m$br <- m$order.effect <- NULL
         m$drop.unused.levels <- TRUE
@@ -104,7 +104,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     player.cols <- diag(1, nplayers)
     rownames(player.cols) <- colnames(player.cols) <- playernames
     colnames(player.cols) <- paste("..", colnames(player.cols),
-                                   sep = "") 
+                                   sep = "")
 ## Now make the Bradley-Terry design matrix.
     cols.to.add <- logical(nrow(m))
     x <- x0 <- model.matrix(Terms, m, contrasts)
@@ -130,8 +130,8 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     cols.to.add <- BTexpand(player.cols[, cols.to.add,
                                         drop = FALSE])
     names.to.add <- colnames(cols.to.add)
-    if (is.matrix(cols.to.add)) x <- cbind(cols.to.add, x) 
-    rownames(x) <- 
+    if (is.matrix(cols.to.add)) x <- cbind(cols.to.add, x)
+    rownames(x) <-
         unravel(outer(playernames, playernames,
                          function(x, y) paste(x, y, sep = " vs ")))
     if (!is.null(offset)) names(offset) <- rownames(x)
@@ -174,8 +174,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
                              make.names(colnames(x))),
                              collapse = "+"))
     if (!br) {fitmodel <- glm} else {
-        require(brlr)
-        fitmodel <- brlr
+        fitmodel <- brglm:::brglm
     }
     result <- fitmodel(fmla, offset = offset, family = binomial,
                   data = data.frame(x), ...)
@@ -211,7 +210,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
     }
     abilities <- cbind(abilities, se.ability)
     colnames(abilities) <- c("ability", "s.e.")
-    rownames(abilities) <- playernames    
+    rownames(abilities) <- playernames
 ## Finally, tidy up the result object
     names(result$fitted.values) <-
         names(result$y) <-
@@ -219,7 +218,7 @@ BTm <- function(formula, refcat = NULL, offset = NULL,
         names(result$prior.weights) <-
         names(result$linear.predictors) <-
         names(result$weights) <-
-        row.names(result$model) <- 
+        row.names(result$model) <-
             rownames(BTyvar)
     result$call <- match.call(expand.dots = TRUE)
     result$xlevels <- xlevels

@@ -1,7 +1,9 @@
+baseball                Baseball data from Agresti (2002)
 BTabilities             estimated abilities in a Bradley-Terry model
 BTm                     Bradley-Terry model and extensions
 BTresiduals             player-specific residuals from a Bradley-Terry
                         model
-baseball                Baseball data from Agresti (2002)
 citations               Statistics journal citation data from Stigler
                         (1994)
+flatlizards             Augrabies Male Flat Lizards: Contest Results
+                        and Predictor Variables

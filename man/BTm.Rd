@@ -41,14 +41,13 @@ NULL, ...)
   to be used in the fitting process. }
   \item{br}{ Logical.  If \code{TRUE}, fitting will be by penalized
     maximum likelihood as in Firth (1992, 1993), using
-    \code{\link[brlr]{brlr}} from
-    package brlr. Default is fitting by maximum likelihood.}
+    \code{\link[brglm]{brglm}}. Default is fitting by maximum likelihood.}
   \item{order.effect}{An optional vector, numeric, indicating an
     order effect to be estimated in the model (for example, a home
     advantage effect).  Values should be 1 where contest winner has
     the advantage, -1 where loser has the advantage, and 0 where neither
     player is advantaged.}
-  \item{\dots}{Other arguments for \code{glm} or \code{brlr} }
+  \item{\dots}{Other arguments for \code{glm} or \code{brglm} }
 }
 \details{
   No allowance is made for tied contests.
@@ -63,16 +62,16 @@ NULL, ...)
 }
 \value{
   An object of class \code{c("BTm", "glm", "lm")}, or of class
-  \code{c("BTm", "brlr", "glm", "lm")} if \code{br = TRUE}.  Components are as
-  for \code{glm} or \code{brlr}, with additionally
+  \code{c("BTm", "brglm", "glm", "lm")} if \code{br = TRUE}.  Components are as
+  for \code{glm} or \code{brglm}, with additionally
   \item{x0}{Model matrix for the formula as supplied (rather than
     the model matrix actually used in the subsidiary call to \code{glm}
-    or \code{brlr}, which is included as component \code{x} if the call
+    or \code{brglm}, which is included as component \code{x} if the call
     includes \code{x = TRUE}).  One row for each player.}
   \item{offset0}{The supplied offset vector, if any was specified.  
     One element for each player.  (The offset vector actually used
     in the subsidiary call to \code{glm}
-    or \code{brlr} is included as component \code{offset}.)}
+    or \code{brglm} is included as component \code{offset}.)}
   \item{y0}{The data frame of contest winners and losers, containing 
   only those rows actually used in fitting the model.}
   \item{order.effect}{The values of order.effect, if specified.}
